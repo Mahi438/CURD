@@ -1,139 +1,92 @@
-import { useState, useEffect } from "react";
+import { useContext, useState } from "react";
+import { ProductContext } from "./ProductContext";
 
 function MyProducts() {
-  const [products, setProducts] = useState([]);
-  const [title, setTitle] = useState("");
-  const [price, setPrice] = useState("");
-  const [description, setDescription] = useState("");
-  const [editId, setEditId] = useState(null); // edit mode
+  const { products, addProduct, deleteProduct, updateProduct } =
+    useContext(ProductContext);
 
-  // Load products from localStorage on mount
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("myProducts")) || [];
-    setProducts(saved);
-  }, []);
+  const [form, setForm] = useState({
+    id: null,
+    title: "",
+    price: "",
+    description: "",
+  });
 
-  // Save products to localStorage whenever products change
-  useEffect(() => {
-    localStorage.setItem("myProducts", JSON.stringify(products));
-  }, [products]);
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  // Add or Update product
-  const handleSubmit = () => {
-    if (!title || !price || !description) return alert("All fields required");
-
-    if (editId !== null) {
-      // Edit product
-      const updated = products.map(p =>
-        p.id === editId ? { ...p, title, price, description } : p
-      );
-      setProducts(updated);
-      setEditId(null);
+    if (form.id) {
+      updateProduct(form);
     } else {
-      // Add new product
-      const newProduct = {
-        id: Date.now(),
-        title,
-        price,
-        description
-      };
-      setProducts([...products, newProduct]);
+      addProduct({ ...form, id: Date.now() });
     }
 
-    setTitle("");
-    setPrice("");
-    setDescription("");
-  };
-
-  // Edit product
-  const handleEdit = (p) => {
-    setEditId(p.id);
-    setTitle(p.title);
-    setPrice(p.price);
-    setDescription(p.description);
-  };
-
-  // Delete product
-  const handleDelete = (id) => {
-    const filtered = products.filter(p => p.id !== id);
-    setProducts(filtered);
+    setForm({ id: null, title: "", price: "", description: "" });
   };
 
   return (
     <div className="container mt-4">
-      <h3>My Products (CRUD)</h3>
+      <h2>My Products (Context API)</h2>
 
-      {/* Form */}
-      <div className="row mb-3">
-        <div className="col">
-          <input
-            className="form-control"
-            placeholder="Product title"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-          />
-        </div>
-        <div className="col">
-          <input
-            className="form-control"
-            placeholder="Price"
-            value={price}
-            onChange={e => setPrice(e.target.value)}
-          />
-        </div>
-        <div className="col">
-          <input
-            className="form-control"
-            placeholder="Description"
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-          />
-        </div>
-        <div className="col">
-          <button className="btn btn-success w-100" onClick={handleSubmit}>
-            {editId !== null ? "Update Product" : "Add Product"}
-          </button>
-        </div>
-      </div>
+      <form onSubmit={handleSubmit}>
+        <input
+          className="form-control mb-2"
+          placeholder="Title"
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+        />
 
-      {/* Table */}
-      <table className="table table-bordered">
+        <input
+          className="form-control mb-2"
+          placeholder="Price"
+          value={form.price}
+          onChange={(e) => setForm({ ...form, price: e.target.value })}
+        />
+
+        <textarea
+          className="form-control mb-2"
+          placeholder="Description"
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+        />
+
+        <button className="btn btn-success">
+          {form.id ? "Update" : "Add"} Product
+        </button>
+      </form>
+
+      <table className="table table-bordered mt-4">
         <thead>
           <tr>
             <th>Title</th>
             <th>Price</th>
             <th>Description</th>
-            <th>Action</th>
+            <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
-          {products.map(p => (
+          {products.map((p) => (
             <tr key={p.id}>
               <td>{p.title}</td>
-              <td>₹ {p.price}</td>
+              <td>{p.price}</td>
               <td>{p.description}</td>
               <td>
                 <button
-                  className="btn btn-primary btn-sm me-2"
-                  onClick={() => handleEdit(p)}
+                  className="btn btn-warning btn-sm me-2"
+                  onClick={() => setForm(p)}
                 >
                   Edit
                 </button>
                 <button
                   className="btn btn-danger btn-sm"
-                  onClick={() => handleDelete(p.id)}
+                  onClick={() => deleteProduct(p.id)}
                 >
                   Delete
                 </button>
               </td>
             </tr>
           ))}
-          {products.length === 0 && (
-            <tr>
-              <td colSpan="4" className="text-center">No products added</td>
-            </tr>
-          )}
         </tbody>
       </table>
     </div>
