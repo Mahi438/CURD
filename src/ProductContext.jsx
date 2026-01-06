@@ -1,47 +1,45 @@
 import { createContext, useState, useEffect } from "react";
+import API from "./api";
 
 export const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
-  // products state (global)
   const [products, setProducts] = useState([]);
 
-  // page refresh ke baad bhi data rahe
-  useEffect(() => {
-    const storedProducts = JSON.parse(localStorage.getItem("myProducts"));
-    if (storedProducts) {
-      setProducts(storedProducts);
+  const fetchProducts = async () => {
+    try {
+      const res = await API.get("/products");
+      setProducts(res.data);
+    } catch (err) {
+      console.log(err.response?.data || err.message);
     }
-  }, []);
-
-  // localStorage update
-  useEffect(() => {
-    localStorage.setItem("myProducts", JSON.stringify(products));
-  }, [products]);
-
-  // ADD
-  const addProduct = (product) => {
-    setProducts([...products, product]);
   };
 
-  // DELETE
-  const deleteProduct = (id) => {
-    setProducts(products.filter((p) => p.id !== id));
+  useEffect(() => { fetchProducts(); }, []);
+
+  const addProduct = async (product) => {
+    try {
+      const res = await API.post("/products", product);
+      setProducts([...products, res.data]);
+    } catch { alert("Error adding product"); }
   };
 
-  // EDIT
-  const updateProduct = (updatedProduct) => {
-    setProducts(
-      products.map((p) =>
-        p.id === updatedProduct.id ? updatedProduct : p
-      )
-    );
+  const updateProduct = async (product) => {
+    try {
+      const res = await API.put(/products/`${product.id}`, product);
+      setProducts(products.map(p => p.id === product.id ? res.data : p));
+    } catch { alert("Error updating product"); }
+  };
+
+  const deleteProduct = async (id) => {
+    try {
+      await API.delete(`/products/${id}`);
+      setProducts(products.filter(p => p.id !== id));
+    } catch { alert("Error deleting product"); }
   };
 
   return (
-    <ProductContext.Provider
-      value={{ products, addProduct, deleteProduct, updateProduct }}
-    >
+    <ProductContext.Provider value={{ products, addProduct, updateProduct, deleteProduct }}>
       {children}
     </ProductContext.Provider>
   );
