@@ -7,12 +7,16 @@ export default function AddProduct() {
   const [price, setPrice] = useState("");
   const navigate = useNavigate();
 
-  const submit = async (e) => {
-    e.preventDefault();
-    await API.post("/products", { name, price });
+ const submit = async (e) => {
+  e.preventDefault();
+  try {
+    await API.post("/api/products", { name, price }); // <-- /api added
     navigate("/products");
-  };
-
+  } catch (err) {
+    console.error(err);
+    alert("Failed to add product");
+  }
+};
   return (
     <div className="row justify-content-center">
       <div className="col-md-6 col-lg-4">

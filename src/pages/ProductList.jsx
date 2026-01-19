@@ -6,11 +6,11 @@ export default function ProductList() {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-  API.get("/api/products").then(res => setProducts(res.data));
+  API.get("/products").then(res => setProducts(res.data));
 }, []);
 
 const deleteProduct = async (id) => {
-  await API.delete(`/api/products/${id}`);
+  await API.delete(`/products/${id}`);
   setProducts(products.filter(p => p._id !== id));
 };
 
